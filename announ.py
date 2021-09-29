@@ -19,7 +19,7 @@ G_HEADERS = {
 G_URL = r'https://caigou.chinatelecom.com.cn/MSS-PORTAL/announcementjoin/list.do?provinceJT=NJT'
 
 # Setting FORM DATA
-G_DICT = {'provinceJT': 'NJT', 'paging.pageSize': '500', 'goPageNum': '1'}
+G_DICT = {'provinceJT': 'NJT', 'paging.pageSize': '900', 'goPageNum': '1'}
 
 # 设置表格头信息
 G_CARS = ["省份", "是否终止", "公告名称", "公告编码", "公告类型", "创建时间日期", "开始时间", "截止时间"]
@@ -50,8 +50,8 @@ def initAnno():
     res = urllib.request.urlopen(req)
     html = res.read()
     soup = BeautifulSoup(html, 'html.parser', from_encoding='gb2312')
-    all_talbe = soup.find_all('table', attrs={'class': 'table_data'}, limit=30)
-    first_tr = all_talbe[0]
+    v_talbe = soup.find_all('table', attrs={'class': 'table_data'}, limit=30)
+    first_tr = v_talbe[0]
     all_tr = first_tr.select('tr')
 
     for lp in all_tr:
