@@ -5,7 +5,6 @@ import xlwt
 import win32com.client as win32
 import openpyxl
 import time
-from po.Announcement import Announcement
 from bs4 import BeautifulSoup
 
 # Setting Headers
@@ -19,7 +18,7 @@ G_HEADERS = {
 G_URL = r'https://caigou.chinatelecom.com.cn/MSS-PORTAL/announcementjoin/list.do?provinceJT=NJT'
 
 # Setting FORM DATA
-G_DICT = {'provinceJT': 'NJT', 'paging.pageSize': '900', 'goPageNum': '1'}
+G_DICT = {'provinceJT': 'NJT', 'paging.pageSize': '10', 'goPageNum': '1'}
 
 # 设置表格头信息
 G_CARS = ["省份", "是否终止", "公告名称", "公告编码", "公告类型", "创建时间日期", "开始时间", "截止时间"]
@@ -44,7 +43,7 @@ def main():
 
 
 def initAnno():
-    all_anno = []
+    arry_anno = []
     data = urllib.parse.urlencode(G_DICT).encode('utf-8')
     req = urllib.request.Request(url=G_URL, data=data, headers=G_HEADERS)
     res = urllib.request.urlopen(req)
@@ -53,62 +52,67 @@ def initAnno():
     v_talbe = soup.find_all('table', attrs={'class': 'table_data'}, limit=30)
     first_tr = v_talbe[0]
     all_tr = first_tr.select('tr')
-
+    i = 0
     for lp in all_tr:
+        '''
+         定义二维数组
+        '''
+        arry_anno.append([])
         '''
         table 第一行 是表头，应跳过
         '''
-        if None != lp.get('class'):
+        if '' != lp.get('class'):
             continue
         all_td = lp.select('td')
+        for pd in all_td:
+            arry_anno[i].append(replace_trip(pd.get_text()))
+        i += 1
 
-        anno = Announcement(replaceAll(all_td[0].get_text()), replaceAll(all_td[1].get_text()),
-                            replaceAll(all_td[2].get_text()), replaceAll(all_td[3].get_text()),
-                            replaceAll(all_td[4].get_text()), replaceAll(all_td[5].get_text()),
-                            replaceAll(all_td[6].get_text()), replaceAll(all_td[7].get_text()))
-        all_anno.append(anno)
     # BEGIN **************************** 开始写入Excel
     # 1、文件名
-    file = getFileName()
+    file = get_file_name()
     # 2、检查Excel文件不存在则创建
-    lag = makeExcel(file)
+    lag = make_excel(file)
     if lag:
         # 2.1、Excel格式转换
         xlsx_file = change(file)
     else:
         xlsx_file = file + "x"
     # 3、写入Excel
-    write2Excel(all_anno, xlsx_file)
+    write_excel(arry_anno, xlsx_file)
     # END **************************** 开始写入Excel
 
 
-def write2Excel(all_anno, file):
+def c_print(all_anno):
+    for x in all_anno:
+        for y in x:
+            print(y)
+        print('\n')
+
+
+def write_excel(all_anno, file):
     workbook = openpyxl.load_workbook(file)
     sheet = workbook.active
     # 获得行数
-    rowNum = sheet.max_row
+    row_num = sheet.max_row
     # 获得列数
-    colNum = sheet.max_column
+    col_num = sheet.max_column
 
-    currentNum = rowNum
-    for lp in all_anno:
-        currentNum += 1
-        sheet.cell(currentNum, 1).value = lp.provincetr
-        sheet.cell(currentNum, 2).value = lp.is_termination
-        sheet.cell(currentNum, 3).value = lp.name
-        sheet.cell(currentNum, 4).value = lp.code
-        sheet.cell(currentNum, 5).value = lp.anno_type
-        sheet.cell(currentNum, 6).value = lp.create_time
-        sheet.cell(currentNum, 7).value = lp.begin_time
-        sheet.cell(currentNum, 8).value = lp.end_time
+    current_num = row_num
+    for arry in all_anno:
+        current_num += 1
+        zoos = 1
+        for con in arry:
+            sheet.cell(current_num, zoos).value = con
+            zoos += 1
     workbook.save(file)
 
 
-def replaceAll(source_str):
+def replace_trip(source_str):
     return source_str.replace('\n', '').replace('\r', '').lstrip()
 
 
-def makeExcel(file):
+def make_excel(file):
     temp = file + "x"
     if os.path.isfile(temp):
         logging.error(temp + ' File exists')
@@ -148,7 +152,7 @@ def makeExcel(file):
         return 1
 
 
-def getFileName():
+def get_file_name():
     ticks = time.strftime("%Y%m%d%H", time.localtime())
     return r'中国电信招投标公告信息-' + ticks + '.xls'
 

@@ -5,6 +5,8 @@
 **/auto-generate-code/
 **/resources/alioss.properties
 
+dist/
+announ.spec
 # IntelliJ project files
 .idea
 *.iml
