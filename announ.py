@@ -1,27 +1,22 @@
 import urllib.request
 import logging
 import os.path
-import xlwt
-import win32com.client as win32
+import xlsxwriter
 import openpyxl
 import time
 from bs4 import BeautifulSoup
 
-# Setting Headers
 G_HEADERS = {
     'Host': 'caigou.chinatelecom.com.cn',
-    'Cookie': 'name=value; CaiGouServiceInfo=!dMNM/vuDiA8BZNqU9I+YAUGJNqjObIaVUgLPo4CWoivbznHIwJF+VRngK7LpUps4b/5pfCDWNGQBirM=; JSESSIONID=00006WCsfp4wddDiBj1WupXLQz4:18djc0j4k',
+    'Cookie': 'name=value; JSESSIONID=0000SA7Ec6d22fg-97HOsOdl0Xm:18djc0k9n; CaiGouServiceInfo=!0VP6MTVh+Zxg7PeU9I+YAUGJNqjObLhkHa41D2ErPx6NwKr/ztomLlXmCjxJcedF75IwY7hA0ng1ml8=',
     'Content-Type': 'application/x-www-form-urlencoded',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36'}
 
-# 交互URL链接
 G_URL = r'https://caigou.chinatelecom.com.cn/MSS-PORTAL/announcementjoin/list.do?provinceJT=NJT'
 
-# Setting FORM DATA
-G_DICT = {'provinceJT': 'NJT', 'paging.pageSize': '10', 'goPageNum': '1'}
+G_DICT = {'provinceJT': 'NJT', 'paging.pageSize': '600', 'goPageNum': '1'}
 
-# 设置表格头信息
-G_CARS = ["省份", "是否终止", "公告名称", "公告编码", "公告类型", "创建时间日期", "开始时间", "截止时间"]
+G_SHEET_HEADINGS = ["省份", "是否终止", "公告名称", "公告编码", "公告类型", "创建时间日期", "开始时间", "截止时间"]
 
 
 def main():
@@ -43,7 +38,7 @@ def main():
 
 
 def initAnno():
-    arry_anno = []
+    arr_anno = []
     data = urllib.parse.urlencode(G_DICT).encode('utf-8')
     req = urllib.request.Request(url=G_URL, data=data, headers=G_HEADERS)
     res = urllib.request.urlopen(req)
@@ -57,29 +52,26 @@ def initAnno():
         '''
          定义二维数组
         '''
-        arry_anno.append([])
+        arr_anno.append([])
         '''
         table 第一行 是表头，应跳过
         '''
-        if '' != lp.get('class'):
+        if None != lp.get('class'):
             continue
         all_td = lp.select('td')
         for pd in all_td:
-            arry_anno[i].append(replace_trip(pd.get_text()))
+            value = replace_trip(pd.get_text())
+
+            arr_anno[i].append(value)
         i += 1
 
     # BEGIN **************************** 开始写入Excel
     # 1、文件名
     file = get_file_name()
     # 2、检查Excel文件不存在则创建
-    lag = make_excel(file)
-    if lag:
-        # 2.1、Excel格式转换
-        xlsx_file = change(file)
-    else:
-        xlsx_file = file + "x"
+    init_excel(file)
     # 3、写入Excel
-    write_excel(arry_anno, xlsx_file)
+    write_excel(arr_anno, file)
     # END **************************** 开始写入Excel
 
 
@@ -90,19 +82,19 @@ def c_print(all_anno):
         print('\n')
 
 
-def write_excel(all_anno, file):
+def write_excel(arr_anno, file):
     workbook = openpyxl.load_workbook(file)
     sheet = workbook.active
     # 获得行数
     row_num = sheet.max_row
     # 获得列数
-    col_num = sheet.max_column
+    # col_num = sheet.max_column
 
     current_num = row_num
-    for arry in all_anno:
+    for arr in arr_anno:
         current_num += 1
         zoos = 1
-        for con in arry:
+        for con in arr:
             sheet.cell(current_num, zoos).value = con
             zoos += 1
     workbook.save(file)
@@ -112,63 +104,25 @@ def replace_trip(source_str):
     return source_str.replace('\n', '').replace('\r', '').lstrip()
 
 
-def make_excel(file):
-    temp = file + "x"
-    if os.path.isfile(temp):
-        logging.error(temp + ' File exists')
+def init_excel(file):
+    if os.path.isfile(file):
+        logging.error(file + ' File exists')
         return 0
     else:
-        logging.warning('The ' + file + ' does not exist! Start creating file!')
-        # 创建一个workbook 设置编码
-        workbook = xlwt.Workbook(encoding='utf-8')
-        # 创建一个worksheet
-        worksheet = workbook.add_sheet('公告信息')
-        # 边框
-        borders = xlwt.Borders()
-        borders.left = xlwt.Borders.THIN
-        borders.right = xlwt.Borders.THIN
-        borders.top = xlwt.Borders.THIN
-        borders.bottom = xlwt.Borders.THIN
-        # 边框颜色
-        borders.left_colour = 0x40
-        borders.right_colour = 0x40
-        borders.top_colour = 0x40
-        borders.bottom_colour = 0x40
-
-        # 表格样式
-        style = xlwt.XFStyle()
-
-        # 表格字体
-        font = xlwt.Font()
-        font.name = 'Times New Roman'
-        font.bold = True
-        font.underline = True
-        style.font = font
-
-        for i in range(len(G_CARS)):
-            # 表格Header 写入excel
-            worksheet.write(0, i, G_CARS[i], style)
-        workbook.save(file)
+        logging.warning('The ' + file + ' \t does not exist! Start creating file!')
+        workbook = xlsxwriter.Workbook(file)
+        # 创建一个sheet
+        worksheet = workbook.add_worksheet('公告信息')
+        bold = workbook.add_format({'bold': 1})
+        # 写入表头
+        worksheet.write_row('A1', G_SHEET_HEADINGS, bold)
+        workbook.close()
         return 1
 
 
 def get_file_name():
     ticks = time.strftime("%Y%m%d%H", time.localtime())
-    return r'中国电信招投标公告信息-' + ticks + '.xls'
-
-
-def change(file):
-    # 文件绝对路径
-    filename = os.path.realpath(file)
-    excel = win32.gencache.EnsureDispatch('Excel.Application')
-    wb = excel.Workbooks.Open(filename)
-    # 转成xlsx格式，路径在原路径下
-    file_xlsx = filename + "x"
-    wb.SaveAs(file_xlsx, FileFormat=51)
-    wb.Close()
-    excel.Application.Quit()
-    os.remove(file)
-    return file_xlsx
+    return r'中国电信招投标公告信息-' + ticks + '.xlsx'
 
 
 if __name__ == '__main__':
