@@ -8,13 +8,13 @@ from bs4 import BeautifulSoup
 
 G_HEADERS = {
     'Host': 'caigou.chinatelecom.com.cn',
-    'Cookie': 'name=value; JSESSIONID=0000SA7Ec6d22fg-97HOsOdl0Xm:18djc0k9n; CaiGouServiceInfo=!0VP6MTVh+Zxg7PeU9I+YAUGJNqjObLhkHa41D2ErPx6NwKr/ztomLlXmCjxJcedF75IwY7hA0ng1ml8=',
+    'Cookie': 'name=value; JSESSIONID=0000xrup2flCI2y1s38ilYGRXTQ:18djc0j4k; CaiGouServiceInfo=!e7fac59kWPhciaqU9I+YAUGJNqjObChF1f47G7hyMOJcKe+llhGjTigIaglrHCX3cU0RRz1SKOiRu6w=',
     'Content-Type': 'application/x-www-form-urlencoded',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36'}
 
 G_URL = r'https://caigou.chinatelecom.com.cn/MSS-PORTAL/announcementjoin/list.do?provinceJT=NJT'
 
-G_DICT = {'provinceJT': 'NJT', 'paging.pageSize': '600', 'goPageNum': '1'}
+G_DICT = {'provinceJT': 'NJT', 'paging.pageSize': '10000', 'goPageNum': '1'}
 
 G_SHEET_HEADINGS = ["省份", "是否终止", "公告名称", "公告编码", "公告类型", "创建时间日期", "开始时间", "截止时间"]
 

@@ -21,4 +21,6 @@ class Announcement:
 
     def __str__(self) -> str:
         return 'provincetr：%s\t  isTermination：%s\t  name：%s\t code：%s\t type：%s\t createTime：%s\t beginTime：%s\t ' \
-               'endTime：%s\t' % (self.provincetr, self.is_termination, self.name, self.code, self.anno_type, self.create_time, self.begin_time, self.end_time)
+               'endTime：%s\t' % (
+               self.provincetr, self.is_termination, self.name, self.code, self.anno_type, self.create_time,
+               self.begin_time, self.end_time)
