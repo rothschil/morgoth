@@ -1,5 +1,5 @@
 class Announcement:
-    "Announcement class"
+    "Announcement class  招标合同公告实例"
 
     def __init__(self, provincetr, is_termination, name, code, anno_type, create_time, begin_time, end_time):
         # 省份
